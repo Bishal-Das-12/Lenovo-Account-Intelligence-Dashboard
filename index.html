@@ -316,7 +316,7 @@
       <div class="chart" id="ch-geo"></div>
     </div>
     <div class="card c4">
-      <div class="card-h"><div><div class="card-t">Employee Distribution</div><div class="card-d">Click a bar to filter · company headcount band</div></div></div>
+      <div class="card-h"><div><div class="card-t">Employee Distribution</div><div class="card-d">Click a bar to filter · accounts with known headcount</div></div></div>
       <div class="chart" id="ch-size"></div>
     </div>
     <div class="card c5">
@@ -349,6 +349,7 @@ let DATA = {"rnd": {"accounts": [{"ind": "Retail", "loc": "Australia", "hc": 359
 const S = { ds:'activation', ind:new Set(), loc:new Set(), size:new Set(), cohort:{groups:[]}, intentMin:1, gWin:'12', itWin:'12' };
 /* company-size bands, ordinal — kept in this order everywhere (not ranked by count) */
 const HC_ORDER=['1–50','51–200','201–500','501–1K','1K–5K','5K+','Unknown'];
+const HC_CHART_ORDER=HC_ORDER.filter(k=>k!=='Unknown'); // graph shows sized accounts only
 const hcBand=x=> x.hc==null ? 'Unknown'
   : x.hc<=50 ? '1–50' : x.hc<=200 ? '51–200' : x.hc<=500 ? '201–500'
   : x.hc<=1000 ? '501–1K' : x.hc<=5000 ? '1K–5K' : '5K+';
@@ -829,7 +830,7 @@ function renderAll(){
   chSignals();chPriority();chMomentum();
   chHBars('#ch-industry',a=>a.byInd,v=>toggleFilter('ind',v),S.ind);
   chHBars('#ch-geo',a=>a.byLoc,v=>toggleFilter('loc',v),S.loc);
-  chHBars('#ch-size',a=>a.bySize,v=>toggleFilter('size',v),S.size,{order:HC_ORDER,labelW:74});
+  chHBars('#ch-size',a=>a.bySize,v=>toggleFilter('size',v),S.size,{order:HC_CHART_ORDER,labelW:74});
   chIntensity();chCoverage();
   syncFilterButtons();
 }
