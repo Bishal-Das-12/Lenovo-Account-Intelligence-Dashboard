@@ -59,8 +59,18 @@ up without anyone reloading.
 Regenerate `index.html` with the new `let DATA = {…};` line and push. The refresh
 loop looks for that exact single-line form, so keep the payload on one line.
 
-## Note on the Sprouts logo
+## Sprouts logo
 
-The two SVGs under `assets/` are hand-built stand-ins, not the official brand
-files. Drop the real assets in at the same paths to swap them everywhere — the
-markup references them by filename only.
+Both SVGs under `assets/` are derived from the official vector at
+`https://sprouts.ai/sprouts-logo.svg` — geometry untouched. Only the fills were
+changed, to the monochrome treatment:
+
+| file | squircle | glyph | wordmark | used on |
+| --- | --- | --- | --- | --- |
+| `sprouts-logo.svg` | `#1A1A1A` | white | `#1A1A1A` | footer (light) |
+| `sprouts-logo-white.svg` | white | `#161616` | white | header (dark) |
+
+The Figma drop-shadow filter and the green brand gradient (`#00D95B` → `#00913D`)
+were dropped, and the viewBox was tightened to the lockup bounds
+(`6 2 141.18 32`). To go back to the brand green, re-add the gradient on the
+squircle path.
