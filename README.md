@@ -10,7 +10,7 @@ filtering. Powered by [Sprouts.ai](https://sprouts.ai).
 index.html                      the dashboard — markup, styles, data and logic in one file
 assets/sprouts-logo.svg         Sprouts lockup, dark (used in the footer)
 assets/sprouts-logo-white.svg   Sprouts lockup, inverted (used in the dark header)
-assets/favicon.svg
+assets/favicon.svg              Sprouts squircle mark, official (browser tab)
 vercel.json                     static hosting config + cache headers
 ```
 
@@ -40,8 +40,13 @@ Or from the CLI:
 npx vercel --prod
 ```
 
-`vercel.json` marks the HTML `must-revalidate` so a redeploy is picked up on the
-next refresh tick, and caches `assets/` for a day.
+`vercel.json` marks both the HTML and `assets/` `must-revalidate`, so a redeploy
+is picked up on the next refresh tick.
+
+Asset filenames are not content-hashed, so a long `max-age` on `assets/` would
+strand browsers on an old logo until the TTL expired — a redeploy cannot
+invalidate a copy the browser never re-requests. Keep the revalidation, or add
+a content hash to the filenames before caching them hard.
 
 ## Auto-refresh
 
