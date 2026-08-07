@@ -170,7 +170,7 @@
   .info-pop .p{font-weight:800;flex:none;width:64px}
   .info-pop .p0{color:#F6564F}.info-pop .p1{color:#F0605F}.info-pop .p2{color:#F79A98}.info-pop .p3{color:#F9C0BE}.info-pop .pu{color:#C4C4CB}
   .info-pop .tx{color:#D9D9DE}
-  .chart{margin-top:14px;flex:1;min-width:0}
+  .chart{margin-top:14px;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--ink-2);font-weight:600}
   .legend .li{display:flex;align-items:center;gap:6px}
   .legend .sw{width:11px;height:11px;border-radius:3px}
@@ -200,13 +200,10 @@
   .stepper button:hover{border-color:var(--red);color:var(--red)}
 
   /* Coverage rings */
-  .cov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:8px}
-  .cov-tile{border:1px solid var(--line-2);border-radius:12px;padding:14px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
-  .cov-rings{display:flex;gap:10px;align-items:center;justify-content:center}
-  .cov-lbl{font-size:12.5px;font-weight:700;color:var(--ink);margin-top:6px}
-  .cov-sub{font-size:11px;color:var(--muted);font-weight:600}
-  .cov-mini{font-size:10px;font-weight:700;color:var(--muted);margin-top:2px}
-  .cov-mini .r{color:var(--red-dark)}.cov-mini .s{color:var(--slate)}
+  .cov-pies{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:8px}
+  .cov-pie{border:1px solid var(--line-2);border-radius:12px;padding:14px 16px 8px}
+  .cov-pie-t{font-size:13px;font-weight:700;color:var(--ink)}
+  .cov-pie-d{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px}
 
   svg{display:block;overflow:visible}
   .chart svg{width:100%}
@@ -224,6 +221,7 @@
   #tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:9px 12px;border-radius:9px;opacity:0;transition:opacity .12s;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:260px;line-height:1.5}
   #tip .tt-t{font-size:12.5px;margin-bottom:3px}
   #tip .tt-r{color:#C4C4CB;font-weight:500}
+  #tip .tt-d{color:#E4E4E8;font-weight:500;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.16)}
   #tip b{color:#fff}
   #tip:after{content:'';position:absolute;bottom:-5px;left:var(--ax,20px);width:10px;height:10px;background:var(--ink);transform:rotate(45deg)}
 
@@ -238,7 +236,7 @@
   #refresh-toggle:hover{opacity:1;color:var(--ink)}
 
   @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.card.c8,.card.c7,.card.c5,.card.c4,.card.c6{grid-column:span 12}}
-  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}.top-inner{padding:14px 18px}.filters-inner,main{padding-left:18px;padding-right:18px}.toggle{margin-left:0;width:100%}.toggle button{flex:1}.powered{padding-left:0;border-left:0}.cov-grid{grid-template-columns:1fr}.cond .c-field{min-width:140px}}
+  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}.top-inner{padding:14px 18px}.filters-inner,main{padding-left:18px;padding-right:18px}.toggle{margin-left:0;width:100%}.toggle button{flex:1}.powered{padding-left:0;border-left:0}.cov-pies{grid-template-columns:1fr}.cond .c-field{min-width:140px}}
 </style>
 </head>
 <body>
@@ -299,12 +297,8 @@
       <div class="card-h"><div><div class="card-t">Account Prioritization <span class="info" tabindex="0">i<span class="info-pop">
         <div class="hd">Sprouts&rsquo; recommended cohorts</div>
         <div class="tx" style="margin-bottom:6px">P0&ndash;P3 rank each account by how ready it looks to buy:</div>
-        <div class="row"><span class="p p0">P0</span><span class="tx"><b>Hottest</b> &mdash; actively hiring <b>and</b> headcount up &ge;10%.</span></div>
-        <div class="row"><span class="p p1">P1</span><span class="tx"><b>Strong</b> &mdash; company headcount growing &ge;5%.</span></div>
-        <div class="row"><span class="p p2">P2</span><span class="tx"><b>Strategic</b> &mdash; showing AI, cloud, digital-transformation, workplace or manufacturing activity.</span></div>
-        <div class="row"><span class="p p3">P3</span><span class="tx"><b>Broad</b> &mdash; large company (50+ staff) or actively hiring.</span></div>
-        <div class="row"><span class="p pu">Unranked</span><span class="tx">No strong buying signal yet.</span></div>
-      </span></span></div><div class="card-d">Distribution across priority tiers (P0 = hottest)</div></div><div class="tag" id="tag-2">R&amp;D</div></div>
+        <div id="pri-rows"></div>
+      </span></span></div><div class="card-d">Ranked accounts by tier (P0 = hottest) · unranked excluded</div></div><div class="tag" id="tag-2">R&amp;D</div></div>
       <div class="chart" id="ch-priority"></div>
     </div>
     <div class="card c4">
@@ -357,6 +351,21 @@ const WINLBL={'3':'3-month','6':'6-month','12':'12-month'};
 const RED='#E42022', RED2='#B81619', SLATE='#3A3A40';
 const PRI_COLORS = {P0:'#B81619',P1:'#E42022',P2:'#F0605F',P3:'#F6A6A5','Unranked':'#CFCFD4'};
 const PRI_ORDER=['P0','P1','P2','P3','Unranked'];
+const PRI_CHART_ORDER=PRI_ORDER.filter(p=>p!=='Unranked'); // prioritization chart shows ranked tiers only
+/* one source for the tier meanings — feeds the info popover and every hover tooltip */
+const PRI_MEANING={
+  P0:{t:'Hottest',   d:'actively hiring <b>and</b> headcount up &ge;10%.'},
+  P1:{t:'Strong',    d:'company headcount growing &ge;5%.'},
+  P2:{t:'Strategic', d:'showing AI, cloud, digital-transformation, workplace or manufacturing activity.'},
+  P3:{t:'Broad',     d:'large company (50+ staff) or actively hiring.'},
+};
+const priTip=(p,v,total)=>`<div class="tt-t">Priority ${p} · ${PRI_MEANING[p].t}</div>`
+  +`<div class="tt-d">${PRI_MEANING[p].d}</div>`
+  +`<div class="tt-r"><b>${fmt(v)}</b> of ${fmt(total)} ranked · <b>${pct(v,total)}%</b></div>`;
+function renderPriorityKey(){
+  $('#pri-rows').innerHTML=PRI_CHART_ORDER.map(p=>
+    `<div class="row"><span class="p ${p.toLowerCase()}">${p}</span><span class="tx"><b>${PRI_MEANING[p].t}</b> &mdash; ${PRI_MEANING[p].d}</span></div>`).join('');
+}
 const DS_LABEL={rnd:'R&D',activation:'Activation',compare:'Compare'};
 let SIGLBL=DATA.summary.signals;
 
@@ -402,11 +411,13 @@ const grpActive=g=>g.conds.length>0;
 const cohortActive=()=>S.cohort.groups.some(grpActive);
 const matchCohort=x=>S.cohort.groups.some(g=>grpActive(g)&&g.conds.every(c=>matchCond(x,c)));
 
-function accountsFor(dsKey){
+/* skip — omit one facet from its own filtering, so a filter panel can count
+   what each option would actually add rather than counting itself down to 1 */
+function accountsFor(dsKey,skip){
   let a=DATA[dsKey].accounts;
-  if(S.ind.size) a=a.filter(x=>S.ind.has(x.ind));
-  if(S.loc.size) a=a.filter(x=>S.loc.has(x.loc));
-  if(S.size.size) a=a.filter(x=>S.size.has(hcBand(x)));
+  if(skip!=='ind'&&S.ind.size) a=a.filter(x=>S.ind.has(x.ind));
+  if(skip!=='loc'&&S.loc.size) a=a.filter(x=>S.loc.has(x.loc));
+  if(skip!=='size'&&S.size.size) a=a.filter(x=>S.size.has(hcBand(x)));
   if(cohortActive()) a=a.filter(matchCohort);
   return a;
 }
@@ -445,18 +456,21 @@ function chSignals(){
   const W=680,rowH=dss.length>1?46:34,top=8,left=200,right=54,H=top+SIGLBL.length*rowH+6;
   const s=svg(W,H);const defs=el('defs',{});s.appendChild(defs);grad(defs,'gRed',RED,'#F0605F');
   const maxPct=Math.max(1,...aggs.flatMap(a=>a.sigs.map((v,i)=>pct(v,a.n))));
-  SIGLBL.forEach((lb,i)=>{
+  /* always ranked by prevalence, highest first — order follows the data, not the signal list */
+  const order=SIGLBL.map((_,i)=>i).sort((x,y)=>aggs[0].sigs[y]-aggs[0].sigs[x]);
+  order.forEach((si,i)=>{
+    const lb=SIGLBL[si];
     const y=top+i*rowH;
     const t=el('text',{x:left-12,y:y+rowH/2+4,'text-anchor':'end','class':'barlabel'});t.textContent=lb;s.appendChild(t);
     const barsH=dss.length>1?15:16, gap=4, blockTop=y+(rowH-(barsH*dss.length+gap*(dss.length-1)))/2, trackW=W-left-right;
     dss.forEach((d,di)=>{
-      const a=aggs[di], p=pct(a.sigs[i],a.n), by=blockTop+di*(barsH+gap);
+      const a=aggs[di], p=pct(a.sigs[si],a.n), by=blockTop+di*(barsH+gap);
       s.appendChild(el('rect',{x:left,y:by,width:trackW,height:barsH,rx:4,'class':'bar-track'}));
       const bw=Math.max(0,trackW*p/maxPct), col=dss.length>1?(di===0?RED:SLATE):'url(#gRed)';
       const r=el('rect',{x:left,y:by,width:0,height:barsH,rx:4,fill:col,'class':'bseg'});
       const g=el('g',{'class':'rowhit'});g.appendChild(r);
-      const vt=el('text',{x:left+bw+8,y:by+barsH-3,'class':'barval'});vt.textContent=`${fmt(a.sigs[i])} · ${p}%`;g.appendChild(vt);
-      g.addEventListener('mousemove',e=>showTip(e,`<div class="tt-t">${lb}</div><div class="tt-r">${DS_LABEL[d]} · <b>${fmt(a.sigs[i])}</b> of ${fmt(a.n)} accounts (<b>${p}%</b>)</div>`));
+      const vt=el('text',{x:left+bw+8,y:by+barsH-3,'class':'barval'});vt.textContent=`${fmt(a.sigs[si])} · ${p}%`;g.appendChild(vt);
+      g.addEventListener('mousemove',e=>showTip(e,`<div class="tt-t">${lb}</div><div class="tt-r">${DS_LABEL[d]} · <b>${fmt(a.sigs[si])}</b> of ${fmt(a.n)} accounts (<b>${p}%</b>)</div>`));
       g.addEventListener('mouseleave',hideTip);s.appendChild(g);
       setTimeout(()=>{r.setAttribute('width',bw);r.style.transition='width .7s cubic-bezier(.2,.8,.2,1)';vt.setAttribute('x',left+bw+8);vt.style.transition='x .7s cubic-bezier(.2,.8,.2,1)';},20+i*25);
     });
@@ -470,7 +484,7 @@ function chPriority(){
   if(dss.length>1){
     const a0=agg(accountsFor('rnd')),a1=agg(accountsFor('activation'));
     const W=460,H=250,left=44,bottom=34,top=10,right=10;
-    const s=svg(W,H);const cats=PRI_ORDER;
+    const s=svg(W,H);const cats=PRI_CHART_ORDER;
     const max=Math.max(1,...cats.flatMap(c=>[pct(a0.pri[c],a0.n),pct(a1.pri[c],a1.n)]));
     const plotH=H-top-bottom, bw=(W-left-right)/cats.length;
     for(let g=0;g<=4;g++){const yy=top+plotH*g/4;s.appendChild(el('line',{x1:left,y1:yy,x2:W-right,y2:yy,'class':'gridline'}));const tx=el('text',{x:left-6,y:yy+3,'text-anchor':'end','class':'axis'});tx.textContent=Math.round(max*(1-g/4))+'%';s.appendChild(tx);}
@@ -489,23 +503,36 @@ function chPriority(){
     box.appendChild(s);box.appendChild(legend(dss));return;
   }
   const a=agg(accountsFor(dss[0]));
-  if(a.n===0){box.innerHTML='<div class="empty">No accounts match the current filters.</div>';return;}
+  /* Unranked is excluded, so the ring closes on the ranked accounts and the
+     slice percentages are shares of that total, not of every account in view */
+  const cats=PRI_CHART_ORDER, total=cats.reduce((s,p)=>s+(a.pri[p]||0),0);
+  if(!total){box.innerHTML='<div class="empty">No ranked accounts match the current filters.</div>';return;}
   const W=460,H=250,cx=140,cy=125,rO=95,rI=60;
-  const s=svg(W,H);let ang=-Math.PI/2;const total=a.n;
-  PRI_ORDER.forEach(p=>{
-    const v=a.pri[p];if(!v)return;const frac=v/total,a2=ang+frac*2*Math.PI;
-    const pe=el('path',{d:arc(cx,cy,rI,rO,ang,a2),fill:PRI_COLORS[p],'class':'rowhit'});
-    pe.addEventListener('mousemove',e=>showTip(e,`<div class="tt-t">Priority ${p}</div><div class="tt-r"><b>${fmt(v)}</b> accounts · <b>${pct(v,total)}%</b></div>`));
+  const s=svg(W,H);let ang=-Math.PI/2;
+  cats.forEach(p=>{
+    const v=a.pri[p];if(!v)return;const frac=v/total,a2=ang+frac*2*Math.PI,full=frac>=0.9999;
+    const pe=el('path',{d:full?annulus(cx,cy,rI,rO):arc(cx,cy,rI,rO,ang,a2),fill:PRI_COLORS[p],'class':'rowhit'});
+    if(full)pe.setAttribute('fill-rule','evenodd');
+    pe.addEventListener('mousemove',e=>showTip(e,priTip(p,v,total)));
     pe.addEventListener('mouseleave',hideTip);
     pe.style.opacity=0;s.appendChild(pe);setTimeout(()=>{pe.style.transition='opacity .5s';pe.style.opacity=1;},40);
     ang=a2;
   });
   const cv=el('text',{x:cx,y:cy-2,'text-anchor':'middle','class':'donut-center-v'});cv.textContent=fmt(total);s.appendChild(cv);
-  const cl=el('text',{x:cx,y:cy+18,'text-anchor':'middle','class':'donut-center-l'});cl.textContent='Accounts';s.appendChild(cl);
-  let ly=44;PRI_ORDER.forEach(p=>{const v=a.pri[p];if(!v)return;
-    s.appendChild(el('rect',{x:270,y:ly-11,width:12,height:12,rx:3,fill:PRI_COLORS[p]}));
-    const t1=el('text',{x:290,y:ly,'class':'barlabel',style:'font-size:12.5px'});t1.textContent=(p==='Unranked'?'Unranked':'Priority '+p);s.appendChild(t1);
-    const t2=el('text',{x:W-8,y:ly,'text-anchor':'end','class':'barval'});t2.textContent=fmt(v)+' · '+pct(v,total)+'%';s.appendChild(t2);
+  const cl=el('text',{x:cx,y:cy+18,'text-anchor':'middle','class':'donut-center-l'});cl.textContent='Ranked';s.appendChild(cl);
+  const rows=cats.filter(p=>a.pri[p]);
+  let ly=cy-((rows.length-1)*34)/2+5;
+  rows.forEach(p=>{const v=a.pri[p];
+    /* the whole legend row is a hover target, so the tier meaning is reachable
+       without opening the info popover */
+    const g=el('g',{});g.style.cursor='help';
+    g.appendChild(el('rect',{x:264,y:ly-17,width:W-270,height:28,fill:'transparent'}));
+    g.appendChild(el('rect',{x:270,y:ly-11,width:12,height:12,rx:3,fill:PRI_COLORS[p]}));
+    const t1=el('text',{x:290,y:ly,'class':'barlabel',style:'font-size:12.5px'});t1.textContent='Priority '+p;g.appendChild(t1);
+    const t2=el('text',{x:W-8,y:ly,'text-anchor':'end','class':'barval'});t2.textContent=fmt(v)+' · '+pct(v,total)+'%';g.appendChild(t2);
+    g.addEventListener('mousemove',e=>showTip(e,priTip(p,v,total)));
+    g.addEventListener('mouseleave',hideTip);
+    s.appendChild(g);
     ly+=34;});
   box.appendChild(s);
 }
@@ -630,16 +657,16 @@ function chIntensity(){
   const box=$('#ch-intensity');box.innerHTML='';
   const dss=datasets(),aggs=dss.map(d=>agg(accountsFor(d)));
   if(aggs.every(a=>a.n===0)){box.innerHTML='<div class="empty">No matching accounts.</div>';return;}
-  const cats=[0,1,2,3,4,5,6,7,8], W=680,H=230,left=32,bottom=40,top=12,right=8;
+  const cats=[1,2,3,4,5,6,7,8], W=680,H=230,left=32,bottom=40,top=12,right=8; // accounts with no signal are omitted
   const s=svg(W,H);const plotH=H-top-bottom,bw=(W-left-right)/cats.length;
-  const max=Math.max(1,...aggs.flatMap(a=>a.inten));
+  const max=Math.max(1,...aggs.flatMap(a=>cats.map(c=>a.inten[c]))); // scale to the shown bars only
   for(let g=0;g<=4;g++){const yy=top+plotH*g/4;s.appendChild(el('line',{x1:left,y1:yy,x2:W-right,y2:yy,'class':'gridline'}));const tx=el('text',{x:left-6,y:yy+3,'text-anchor':'end','class':'axis'});tx.textContent=Math.round(max*(1-g/4));s.appendChild(tx);}
   cats.forEach((c,i)=>{
     const cx=left+i*bw;
     dss.forEach((d,k)=>{
       const a=aggs[k],v=a.inten[c],h=plotH*v/max;
       const single=dss.length<2, iw=single?bw*.6:bw*.33, x=single?cx+bw/2-iw/2:cx+bw/2-iw-2+k*(iw+4),y=top+plotH-h;
-      const col=single?(c===0?'#CFCFD4':RED):(k===0?RED:SLATE);
+      const col=single?RED:(k===0?RED:SLATE);
       const r=el('rect',{x,y:top+plotH,width:iw,height:0,rx:3,fill:col,'class':'rowhit'});
       r.addEventListener('mousemove',e=>showTip(e,`<div class="tt-t">${c} signal${c===1?'':'s'}</div><div class="tt-r">${DS_LABEL[d]} · <b>${fmt(v)}</b> accounts (<b>${pct(v,a.n)}%</b>)</div>`));
       r.addEventListener('mouseleave',hideTip);s.appendChild(r);
@@ -652,40 +679,60 @@ function chIntensity(){
   box.appendChild(s);if(dss.length>1)box.appendChild(legend(dss));
 }
 
-/* Coverage rings (portfolio-level, dataset toggle only) */
-function ringSVG(p,color,size){
-  const r=(size-9)/2,c=2*Math.PI*r,off=c*(1-Math.min(p,100)/100);
-  return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line-2)" stroke-width="7"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset .8s ease"/>
-    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" style="font-size:${(size*0.24).toFixed(0)}px;font-weight:800;fill:var(--ink)">${p}%</text></svg>`;
+/* full ring, for the case where one slice is the whole total (arc() degenerates at 360°) */
+function annulus(cx,cy,rI,rO){
+  return `M${cx-rO} ${cy}A${rO} ${rO} 0 1 1 ${cx+rO} ${cy}A${rO} ${rO} 0 1 1 ${cx-rO} ${cy}Z`
+       + `M${cx-rI} ${cy}A${rI} ${rI} 0 1 0 ${cx+rI} ${cy}A${rI} ${rI} 0 1 0 ${cx-rI} ${cy}Z`;
 }
+const COV_GREY='#CFCFD4'; // "not mapped" is an absence, so it stays neutral in both pies
+function covPie(title,sub,slices,total,centre){
+  const tile=document.createElement('div');tile.className='cov-pie';
+  const head=document.createElement('div');
+  head.innerHTML=`<div class="cov-pie-t">${title}</div><div class="cov-pie-d">${sub}</div>`;
+  tile.appendChild(head);
+  if(!total){const e=document.createElement('div');e.className='empty';e.textContent='No data.';tile.appendChild(e);return tile;}
+  const W=460,H=232,cx=108,cy=116,rO=84,rI=50;
+  const s=svg(W,H);
+  let ang=-Math.PI/2;
+  slices.forEach(sl=>{
+    if(!sl.v)return;
+    const frac=sl.v/total,a2=ang+frac*2*Math.PI,full=frac>=0.9999;
+    const pe=el('path',{d:full?annulus(cx,cy,rI,rO):arc(cx,cy,rI,rO,ang,a2),fill:sl.c,'class':'rowhit',stroke:'#fff','stroke-width':2});
+    if(full)pe.setAttribute('fill-rule','evenodd');
+    pe.addEventListener('mousemove',e=>showTip(e,`<div class="tt-t">${sl.l}</div><div class="tt-r"><b>${fmt(sl.v)}</b> · <b>${pct(sl.v,total)}%</b> of ${fmt(total)}</div>`));
+    pe.addEventListener('mouseleave',hideTip);
+    pe.style.opacity=0;s.appendChild(pe);setTimeout(()=>{pe.style.transition='opacity .5s';pe.style.opacity=1;},40);
+    ang=a2;
+  });
+  const cv=el('text',{x:cx,y:cy-2,'text-anchor':'middle','class':'donut-center-v'});cv.textContent=fmt(total);s.appendChild(cv);
+  const cl=el('text',{x:cx,y:cy+18,'text-anchor':'middle','class':'donut-center-l'});cl.textContent=centre;s.appendChild(cl);
+  const lx=215,sp=30;let ly=cy-((slices.length-1)*sp)/2+5;
+  slices.forEach(sl=>{ // legend keeps every slice, including zero ones — "0 not mapped" is the good news
+    s.appendChild(el('rect',{x:lx,y:ly-11,width:12,height:12,rx:3,fill:sl.c}));
+    const t1=el('text',{x:lx+19,y:ly,'class':'barlabel'});t1.textContent=sl.l;s.appendChild(t1);
+    const t2=el('text',{x:W-6,y:ly,'text-anchor':'end','class':'barval'});t2.textContent=fmt(sl.v)+' · '+pct(sl.v,total)+'%';s.appendChild(t2);
+    ly+=sp;
+  });
+  tile.appendChild(s);
+  return tile;
+}
+/* Straight off the source sheet: domain slices partition "accounts given by Lenovo",
+   LinkedIn slices partition "unique domains". Both ignore the filter bar. */
 function chCoverage(){
   const box=$('#ch-coverage');box.innerHTML='';
-  const dss=datasets();
-  const metrics=[
-    {lbl:'Domain Coverage',k:'unique',base:'given',sub:'unique domains mapped'},
-    {lbl:'Clean Domains Received',k:'correct',base:'given',sub:'usable as provided'},
-    {lbl:'Enriched by Sprouts',k:'updated',base:'unique',sub:'domains Sprouts corrected'},
-    {lbl:'LinkedIn Mapped',k:'liMapped',base:'unique',sub:'company profiles matched'},
-  ];
-  const grid=document.createElement('div');grid.className='cov-grid';
-  metrics.forEach(m=>{
-    const tile=document.createElement('div');tile.className='cov-tile';
-    let rings='',mini='';
-    if(dss.length>1){
-      const fr=DATA.summary.rnd,fa=DATA.summary.activation;
-      const pr=pct(fr[m.k],fr[m.base]),pa=pct(fa[m.k],fa[m.base]);
-      rings=`<div class="cov-rings">${ringSVG(pr,RED,58)}${ringSVG(pa,SLATE,58)}</div>`;
-      mini=`<div class="cov-mini"><span class="r">R&D ${fmt(fr[m.k])}</span> · <span class="s">Act ${fmt(fa[m.k])}</span></div>`;
-    }else{
-      const f=DATA.summary[dss[0]],p=pct(f[m.k],f[m.base]);
-      rings=`<div class="cov-rings">${ringSVG(p,RED,84)}</div>`;
-      mini=`<div class="cov-sub">${fmt(f[m.k])} of ${fmt(f[m.base])} ${m.base==='given'?'given':'unique'}</div>`;
-    }
-    tile.innerHTML=`${rings}<div class="cov-lbl">${m.lbl}</div><div class="cov-sub">${m.sub}</div>${mini}`;
-    grid.appendChild(tile);
+  const dss=datasets(),many=dss.length>1;
+  const grid=document.createElement('div');grid.className='cov-pies';
+  dss.forEach(ds=>{
+    const f=DATA.summary[ds],p=many?DS_LABEL[ds]+' · ':'';
+    grid.appendChild(covPie(p+'Domain Mapping',`${fmt(f.given)} accounts given by Lenovo`,[
+      {l:'Correct as received',v:f.correct,c:'#B81619'},
+      {l:'Updated by Sprouts',v:f.updated,c:'#F0605F'},
+      {l:'Not mapped',v:f.notMapped,c:COV_GREY},
+    ],f.given,'Given'));
+    grid.appendChild(covPie(p+'LinkedIn Mapping',`${fmt(f.unique)} unique domains`,[
+      {l:'LinkedIn mapped',v:f.liMapped,c:RED},
+      {l:'Not mapped',v:f.liNot,c:COV_GREY},
+    ],f.unique,'Unique'));
   });
   box.appendChild(grid);
 }
@@ -836,15 +883,19 @@ function renderAll(){
 }
 
 /* ---------------- filters UI ---------------- */
+/* counts come from the active dataset with every OTHER facet applied, so the
+   number beside an option is the number you land on after picking it */
 function optionUniverse(field){
   const m={};
-  ['rnd','activation'].forEach(d=>DATA[d].accounts.forEach(x=>{const k=field==='size'?hcBand(x):x[field];m[k]=(m[k]||0)+1;}));
+  accountsFor(primary(),field).forEach(x=>{const k=field==='size'?hcBand(x):x[field];m[k]=(m[k]||0)+1;});
   if(field==='size') return HC_ORDER.map(k=>[k,m[k]||0]).filter(e=>e[1]>0); // ordinal, not ranked
   return rankSort(Object.entries(m));
 }
 function buildPanel(field,btn){
   const fg=btn.parentElement;let panel=fg.querySelector('.panel');
-  if(panel){panel.classList.toggle('open');positionClose(panel);return;}
+  /* never reuse a cached panel — its counts were computed for whatever dataset and
+     filters were active when it was built, and would be stale on reopen */
+  if(panel){const wasOpen=panel.classList.contains('open');panel.remove();if(wasOpen)return;}
   if(field==='adv'){buildAdvPanel(fg);return;}
   panel=document.createElement('div');panel.className='panel open';
   const setRef={ind:S.ind,loc:S.loc,size:S.size}[field];
@@ -960,6 +1011,7 @@ document.addEventListener('visibilitychange',()=>{
   else if(refreshOn){refreshData();startRefresh();}
 });
 
+renderPriorityKey();
 renderAll();
 paintRefresh();
 startRefresh();
